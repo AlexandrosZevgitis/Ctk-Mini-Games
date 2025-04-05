@@ -11,16 +11,10 @@ import os
 import pygame
 
 # Accounts so far: 
-        # user: alex pass: 12345
-        # user: nikos pass: 56789
-        # user: maria pass: 12345
-        # user: teo pass: 56789
-        # user: giannis pass: 12345
-
-# SUM 1.700 LINES OF CODE AVERAGE
+        # email: alexalex@mail.com username: alex password:12345: code:1234
 
 # connect database
-connect = sqlite3.connect("login.db")
+connect = sqlite3.connect("users.db")
 cursor = connect.cursor()
 connect_game = sqlite3.connect("game.db")
 cursor_game = connect.cursor()
@@ -29,9 +23,11 @@ cursor_game = connect.cursor()
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,              
+        email TEXT UNIQUE NOT NULL,
         username TEXT UNIQUE NOT NULL,
         hash_password TEXT NOT NULL,
         salt TEXT NOT NULL,
+        code INTEGER NOT NULL,
         tries INTEGER DEFAULT 0
     )
 """)
@@ -47,16 +43,26 @@ else:
 
 def print_database():
     # Connect to the database
-    connect = sqlite3.connect("login.db")
-    cursor = connect.cursor()
+    connect_login = sqlite3.connect("users.db")
+    cursor_login = connect_login.cursor()
+    connect_game = sqlite3.connect("game.db")
+    cursor_game = connect_game.cursor()
+    
 
     # Fetch all users
-    cursor.execute("SELECT * FROM users")
-    rows = cursor.fetchall()
+    cursor_login.execute("SELECT * FROM users")
+    rows_login = cursor_login.fetchall()
+    cursor_game.execute("SELECT * FROM game")
+    rows_game = cursor_game.fetchall()
 
     # Print results
-    for row in rows:
-        print(row)
+    print("USERS DATABASE")
+    for row_login in rows_login:
+        print(row_login)
+    
+    print("GAME DATABASE")
+    for row_game in rows_game:
+        print(row_game)
 
     # Close connection
     connect.close()
@@ -73,7 +79,7 @@ class LoginForm():
         
         # load icon and images
         self.script_dir = os.path.dirname(os.path.abspath(__file__))
-        self.image_filename = ["bg_image.jpg", "email.jpg", "lock.jpg", "google.png", "hide.png", "view.png", "add.png", "arrows.png"]
+        self.image_filename = ["bg_image.jpg", "email.jpg", "lock.jpg", "hide.png", "view.png", "add.png", "arrows.png", "id_card.png"]
         self.image_paths = {name: os.path.join(self.script_dir, "images", name) for name in self.image_filename}
         self.unlock_opened = False
 
@@ -154,14 +160,14 @@ class LoginForm():
         self.forgot_password_label.place(relx=0.61,rely=0.5,anchor="center")
         self.password_entry.lift()
         # bind forgot password
-        self.forgot_password_label.bind("<Button-1>", lambda event: self.forgot_password(self.master))
+        self.forgot_password_label.bind("<Button-1>", lambda event: self.show_loading_screen_for_top_windows("forgot",self.master))
 
         # creating bottom grid widgets
         self.login_button = ctk.CTkButton(self.top_bottom_frame, text="Login", width=260,height=30,border_color="white",fg_color="#430386",font=("Times New Roman",20,"bold"),hover=None,cursor="hand2",command=self.on_login_button_click)
         self.login_button.place(relx=0.45,rely=0.1,anchor="center")
         self.master.bind("<Return>",lambda event=None: self.on_login_button_click())
         self.create_acc_icon = ctk.CTkImage(Image.open(self.image_paths["add.png"]),size=(25,20))
-        self.create_account_button = ctk.CTkButton(self.top_bottom_frame,text="Create An Account",image=self.create_acc_icon,width=260,height=30,border_color="white",fg_color="#430386",font=("Times New Roman",20,"bold"),hover=None,cursor="hand2",compound="left",command=lambda: self.create_account(self.master))
+        self.create_account_button = ctk.CTkButton(self.top_bottom_frame,text="Create An Account",image=self.create_acc_icon,width=260,height=30,border_color="white",fg_color="#430386",font=("Times New Roman",20,"bold"),hover=None,cursor="hand2",compound="left",command=lambda: self.show_loading_screen_for_top_windows("create",self.master))
         self.create_account_button.place(relx=0.45,rely=0.35,anchor="center")
 
         # creating swipe button
@@ -186,6 +192,7 @@ class LoginForm():
         self.is_viewing = not self.is_viewing
 
     def create_account(self, master):
+        # self.show_loading_screen_for_top_windows()
         create_account_window = ctk.CTkToplevel(master)  # Create a new top-level window
         create_account_window.transient(master)  # Make it a child of the main window
         create_account_window.grab_set()  # Force focus on this window
@@ -205,25 +212,27 @@ class LoginForm():
 
     def login_credentials(self):
         new_tries = 0
-        username = self.email_username_entry.get().strip()
+        email = self.email_username_entry.get().strip()
         entered_password = self.password_entry.get().strip()
 
-        if not username or not entered_password:
+        if not email or not entered_password:
             CTkMessagebox(title="Error", message="Both fields are required!!!", icon="cancel")
             return None
         
-        connect = sqlite3.connect("login.db")
+        connect = sqlite3.connect("users.db")
         cursor = connect.cursor()
 
-        cursor.execute("SELECT username FROM users WHERE username = ?", (username,))
+        cursor.execute("SELECT email FROM users WHERE email = ?", (email,))
         existing_user = cursor.fetchone()
+        cursor.execute("SELECT username FROM users WHERE email = ?",(email,))
+        username = cursor.fetchone()
 
         if not existing_user:
-            CTkMessagebox(title="Error", message="Username do not found in database. Please try again with your correct username", icon="warning")
+            CTkMessagebox(title="Error", message="Email do not found in database.", icon="warning")
             connect.close()
             return None
         
-        cursor.execute("SELECT tries FROM users WHERE username = ?", (username,))
+        cursor.execute("SELECT tries FROM users WHERE email = ?", (email,))
         stored_tries = cursor.fetchone()
         if stored_tries:
             stored_tries = stored_tries[0]
@@ -233,7 +242,7 @@ class LoginForm():
             return None
 
         if stored_tries < 3:
-            cursor.execute("SELECT hash_password, salt FROM users WHERE username = ?", (username,))
+            cursor.execute("SELECT hash_password, salt FROM users WHERE email = ?", (email,))
             password_result = cursor.fetchone()
 
             if password_result:
@@ -242,18 +251,19 @@ class LoginForm():
                 entered_hashed_password = hashlib.sha256((entered_password + stored_salt).encode()).hexdigest()
 
             if entered_hashed_password == stored_hashed_password:
-                cursor.execute("UPDATE users SET tries = ? WHERE username = ?", (new_tries, username))
+                cursor.execute("UPDATE users SET tries = ? WHERE email = ?", (new_tries, email))
                 # CTkMessagebox(title="Success", message="Login successfully!", icon="check")
                 connect.commit()
                 connect.close()
+                username = username[0]
                 return username
             else:
                 stored_tries += 1
-                cursor.execute("UPDATE users SET tries = ? WHERE username = ?", (stored_tries, username))
+                cursor.execute("UPDATE users SET tries = ? WHERE email = ?", (stored_tries, email))
                 CTkMessagebox(title="Incorrect", message=f"Incorrect credentials.\nPlease try again.\n You have {3 - stored_tries} tries left.", icon="warning")
                 connect.commit()
                 connect.close()
-                return
+                return None
         else:
             CTkMessagebox(title="Account Locked", message="Account locked! Reset password to unlock your account.", icon="warning")
             connect.close()
@@ -276,12 +286,8 @@ class LoginForm():
 
                 self.master.withdraw()  # Hide login window
 
-                # root = ctk.CTk()
-                # game_menu_window = GameMenu(root, username, username_points)  # Pass parameters
-                # root.mainloop()
                 self.show_loading_screen(username, username_points)
 
-                # self.master.destroy()  # Destroy login window after menu closes
         except Exception as e:
             CTkMessagebox(title="Error", message=f"An unexpected error occurred: {str(e)}", icon="cancel")
             print(e)
@@ -370,18 +376,18 @@ class LoginForm():
             self.swipe_button.place(x=new_x, y=25)
 
     def unlock_credentials(self):
-        unlock_screen = ctk.CTkToplevel(self.master)
-        unlock_screen.transient(self.master)
-        unlock_screen.geometry("400x200")
-        unlock_screen.title("Unlock Window")
-        unlock_screen.configure(fg_color="white")
+        self.unlock_screen = ctk.CTkToplevel(self.master)
+        self.unlock_screen.transient(self.master)
+        self.unlock_screen.geometry("400x200")
+        self.unlock_screen.title("Unlock Window")
+        self.unlock_screen.configure(fg_color="white")
 
 
-        unlock_screen.resizable(False, False)
-        unlock_screen.grab_set() 
+        self.unlock_screen.resizable(False, False)
+        self.unlock_screen.grab_set() 
 
-        screen_width = unlock_screen.winfo_screenwidth()
-        screen_height = unlock_screen.winfo_screenheight()
+        screen_width = self.unlock_screen.winfo_screenwidth()
+        screen_height = self.unlock_screen.winfo_screenheight()
 
         win_width = 400
         win_height = 200
@@ -389,34 +395,142 @@ class LoginForm():
         x_position = (screen_width // 2) - (win_width // 2)
         y_position = (screen_height // 2) - (win_height // 2)
 
-        unlock_screen.geometry(f"{win_width}x{win_height}+{x_position}+{y_position}") 
+        self.unlock_screen.geometry(f"{win_width}x{win_height}+{x_position}+{y_position}") 
 
-        unlock_screen_welcome_label = ctk.CTkLabel(unlock_screen,text="Enter Username & you 4 digit code...",font=("Times New Roman",20,"bold"),text_color="black")
+        # top label
+        unlock_screen_welcome_label = ctk.CTkLabel(self.unlock_screen,text="Enter Username & you 4 digit code...",font=("Times New Roman",20,"bold"),text_color="black")
         unlock_screen_welcome_label.place(relx=0.5,rely=0.2,anchor="center")
-        unlock_screen_username_entry = ctk.CTkEntry(unlock_screen,width=200,height=30,placeholder_text="Enter your username",placeholder_text_color="black",text_color="black",border_color="#430386",fg_color="transparent")
-        unlock_screen_username_entry.place(relx=0.5,rely=0.4,anchor="center")
-        digit_entry_widget1 = ctk.CTkEntry(unlock_screen,width=50,height=50,text_color="white",border_color="#430386",font=("Times New Roman",30), justify="center")
-        digit_entry_widget1.place(relx=0.2,rely=0.7,anchor="center")
-        digit_entry_widget2 = ctk.CTkEntry(unlock_screen,width=50,height=50,text_color="white",border_color="#430386",font=("Times New Roman",30), justify="center")
-        digit_entry_widget2.place(relx=0.4,rely=0.7,anchor="center")
-        digit_entry_widget3 = ctk.CTkEntry(unlock_screen,width=50,height=50,text_color="white",border_color="#430386",font=("Times New Roman",30), justify="center")
-        digit_entry_widget3.place(relx=0.6,rely=0.7,anchor="center")
-        digit_entry_widget4 = ctk.CTkEntry(unlock_screen,width=50,height=50,text_color="white",border_color="#430386",font=("Times New Roman",30), justify="center")
-        digit_entry_widget4.place(relx=0.8,rely=0.7,anchor="center")
+        # username icon and entry
+        self.username_id_icon = ctk.CTkImage(Image.open(self.image_paths["id_card.png"]), size=(42,39))
+        self.username_id_icon_label = ctk.CTkLabel(self.unlock_screen,text="",image=self.username_id_icon)
+        self.username_id_icon_label.place(relx=0.22,rely=0.4,anchor="center")
+        self.unlock_screen_username_entry = ctk.CTkEntry(self.unlock_screen,width=200,height=30,placeholder_text="Enter your username",placeholder_text_color="black",text_color="black",border_color="#430386",fg_color="transparent")
+        self.unlock_screen_username_entry.place(relx=0.55,rely=0.4,anchor="center")
+        # 4 digit entries 
+        self.digit_entry_widget1 = ctk.CTkEntry(self.unlock_screen,width=50,height=50,text_color="white",border_color="#430386",font=("Times New Roman",30), justify="center")
+        self.digit_entry_widget1.place(relx=0.2,rely=0.7,anchor="center")
+        self.digit_entry_widget2 = ctk.CTkEntry(self.unlock_screen,width=50,height=50,text_color="white",border_color="#430386",font=("Times New Roman",30), justify="center")
+        self.digit_entry_widget2.place(relx=0.4,rely=0.7,anchor="center")
+        self.digit_entry_widget3 = ctk.CTkEntry(self.unlock_screen,width=50,height=50,text_color="white",border_color="#430386",font=("Times New Roman",30), justify="center")
+        self.digit_entry_widget3.place(relx=0.6,rely=0.7,anchor="center")
+        self.digit_entry_widget4 = ctk.CTkEntry(self.unlock_screen,width=50,height=50,text_color="white",border_color="#430386",font=("Times New Roman",30), justify="center")
+        self.digit_entry_widget4.place(relx=0.8,rely=0.7,anchor="center")
 
         def on_keyrelease(event, next_entry=None):
-            if len(event.widget.get()) == 1:
-                if next_entry:
-                    next_entry.focus_set()
+            current_text = event.widget.get()
+            if current_text.isdigit():
+                if len(event.widget.get()) == 1:
+                    if next_entry:
+                        next_entry.focus_set()
+                if len(self.digit_entry_widget4.get()) == 1:
+                    username = self.unlock_screen_username_entry.get().strip()
+                    self.digit1 = self.digit_entry_widget1.get()
+                    self.digit2 = self.digit_entry_widget2.get()
+                    self.digit3 = self.digit_entry_widget3.get()
+                    self.digit4 = self.digit_entry_widget4.get()
+                    code = ''.join([self.digit1, self.digit2, self.digit3, self.digit4])
+                    self.swipe_login(username,code)
+            else:
+                event.widget.delete(len(current_text)-1,"end")
 
-            if len(digit_entry_widget4.get()) == 1:
-                self.master.destroy()
+        self.digit_entry_widget1.bind("<KeyRelease>", lambda event: on_keyrelease(event, self.digit_entry_widget2))
+        self.digit_entry_widget2.bind("<KeyRelease>", lambda event: on_keyrelease(event, self.digit_entry_widget3))
+        self.digit_entry_widget3.bind("<KeyRelease>", lambda event: on_keyrelease(event, self.digit_entry_widget4))
+        self.digit_entry_widget4.bind("<KeyRelease>", on_keyrelease)        
 
-        digit_entry_widget1.bind("<KeyRelease>", lambda event: on_keyrelease(event, digit_entry_widget2))
-        digit_entry_widget2.bind("<KeyRelease>", lambda event: on_keyrelease(event, digit_entry_widget3))
-        digit_entry_widget3.bind("<KeyRelease>", lambda event: on_keyrelease(event, digit_entry_widget4))
-        digit_entry_widget4.bind("<KeyRelease>", on_keyrelease)        
+    def show_loading_screen_for_top_windows(self, action, master):
+        self.fade_job = None  # Store the after() callback ID
 
+        loading_screen = ctk.CTkToplevel(master)
+        loading_screen.geometry("400x200")
+        loading_screen.title("Loading...")
+        loading_screen.resizable(False, False)
+        loading_screen.grab_set()
+        loading_screen.protocol("WM_DELETE_WINDOW", lambda: on_close())  # disable manual close
+
+        screen_width = loading_screen.winfo_screenwidth()
+        screen_height = loading_screen.winfo_screenheight()
+        win_width, win_height = 400, 200
+        x_position = (screen_width // 2) - (win_width // 2)
+        y_position = (screen_height // 2) - (win_height // 2)
+        loading_screen.geometry(f"{win_width}x{win_height}+{x_position}+{y_position}")
+
+        loading_label = ctk.CTkLabel(loading_screen, text="Loading...", font=("Arial", 24, "bold"))
+        loading_label.pack(pady=50)
+
+        progress = ctk.CTkProgressBar(loading_screen)
+        progress.pack(pady=10, fill="x", padx=20)
+        progress.start()
+
+        def fade_in(opacity=0.1):
+            if not loading_screen.winfo_exists():
+                return
+
+            if opacity <= 1.0:
+                loading_screen.attributes("-alpha", opacity)
+                self.fade_job = loading_screen.after(100, fade_in, opacity + 0.1)
+            else:
+                self.fade_job = loading_screen.after(2500, lambda: switch_to_top_window())
+
+        def switch_to_top_window():
+            try:
+                if loading_screen.winfo_exists():
+                    progress.stop()
+                    loading_screen.destroy()
+            except:
+                pass
+
+            if action == "create":
+                self.create_account(master)
+            else:
+                self.forgot_password(master)
+
+        def on_close():
+            # Cancel any pending after() jobs
+            if self.fade_job is not None:
+                try:
+                    loading_screen.after_cancel(self.fade_job)
+                except:
+                    pass
+
+            try:
+                if loading_screen.winfo_exists():
+                    progress.stop()
+                    loading_screen.destroy()
+            except:
+                pass
+
+        fade_in()
+
+    def swipe_login(self,username,code):
+        connect = sqlite3.connect("users.db")
+        cursor = connect.cursor()
+        cursor.execute("SELECT username,code FROM users WHERE username = ?",(username,))
+        result = cursor.fetchone()
+
+        if result:
+            stored_username = result[0]
+            stored_code = result[1]
+        
+            if stored_code == code:
+                # Connect to SQLite database
+                connect = sqlite3.connect("game.db")
+                cursor_game_points = connect.cursor()
+                cursor_game_points.execute("SELECT points FROM game WHERE username = ?", (username,))
+                result = cursor_game_points.fetchone()  # Fetch one record
+                connect.close()
+
+                # Extract points (default to 0 if user has no points)
+                username_points = result[0] if result else 0
+
+                self.master.withdraw()
+                self.unlock_screen.destroy()
+                self.show_loading_screen(stored_username, username_points)  
+            else:
+                return None
+        else:
+            return None   
+        
 
 if __name__ == "__main__":
     ctk.set_appearance_mode("Dark")

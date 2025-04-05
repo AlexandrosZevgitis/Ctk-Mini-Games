@@ -19,7 +19,8 @@ cursor.execute("""
         g_t_n INTEGER DEFAULT 0,
         hangman INTEGER DEFAULT 0,
         r_p_s INTEGER DEFAULT 0,
-        points INTEGER DEFAULT 100
+        points INTEGER DEFAULT 100,
+        FOREIGN KEY(username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE
     )
 """)
 
