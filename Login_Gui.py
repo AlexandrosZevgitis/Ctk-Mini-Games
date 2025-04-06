@@ -79,7 +79,7 @@ class LoginForm():
         
         # load icon and images
         self.script_dir = os.path.dirname(os.path.abspath(__file__))
-        self.image_filename = ["bg_image.jpg", "email.jpg", "lock.jpg", "hide.png", "view.png", "add.png", "arrows.png", "id_card.png"]
+        self.image_filename = ["bg_image.jpg", "email.jpg", "lock.jpg", "hide.png", "view.png", "add.png", "arrows.png", "id_card.png","reset.png"]
         self.image_paths = {name: os.path.join(self.script_dir, "images", name) for name in self.image_filename}
         self.unlock_opened = False
 
@@ -344,7 +344,7 @@ class LoginForm():
             game_menu_window = GameMenu(root, username, username_points)
             root.mainloop()
 
-            self.master.destroy()
+            # self.master.destroy()
 
         fade_in()  # Start fade-in animation
 
@@ -381,6 +381,7 @@ class LoginForm():
         self.unlock_screen.geometry("400x200")
         self.unlock_screen.title("Unlock Window")
         self.unlock_screen.configure(fg_color="white")
+        self.unlock_opened = False
 
 
         self.unlock_screen.resizable(False, False)
@@ -406,15 +407,23 @@ class LoginForm():
         self.username_id_icon_label.place(relx=0.22,rely=0.4,anchor="center")
         self.unlock_screen_username_entry = ctk.CTkEntry(self.unlock_screen,width=200,height=30,placeholder_text="Enter your username",placeholder_text_color="black",text_color="black",border_color="#430386",fg_color="transparent")
         self.unlock_screen_username_entry.place(relx=0.55,rely=0.4,anchor="center")
+        # reset username or code 
+        self.reset_username = ctk.CTkLabel(self.unlock_screen,text="Reset username",text_color="red",font=("Times New Roman",14,"bold"),cursor="hand2")
+        self.reset_username.place(relx=0.4,rely=0.53,anchor="center")
+        self.reset_username.bind("<Button-1>",self.reset_username_gui)
+        self.reset_code = ctk.CTkLabel(self.unlock_screen,text="Reset Code",text_color="red",font=("Times New Roman",14,"bold"),cursor="hand2")
+        self.reset_code.place(relx=0.7,rely=0.53,anchor="center")
+        self.reset_code.bind("<Button-1>",self.reset_code_gui)
+        self.unlock_screen_username_entry.lift()
         # 4 digit entries 
         self.digit_entry_widget1 = ctk.CTkEntry(self.unlock_screen,width=50,height=50,text_color="white",border_color="#430386",font=("Times New Roman",30), justify="center")
-        self.digit_entry_widget1.place(relx=0.2,rely=0.7,anchor="center")
+        self.digit_entry_widget1.place(relx=0.2,rely=0.72,anchor="center")
         self.digit_entry_widget2 = ctk.CTkEntry(self.unlock_screen,width=50,height=50,text_color="white",border_color="#430386",font=("Times New Roman",30), justify="center")
-        self.digit_entry_widget2.place(relx=0.4,rely=0.7,anchor="center")
+        self.digit_entry_widget2.place(relx=0.4,rely=0.72,anchor="center")
         self.digit_entry_widget3 = ctk.CTkEntry(self.unlock_screen,width=50,height=50,text_color="white",border_color="#430386",font=("Times New Roman",30), justify="center")
-        self.digit_entry_widget3.place(relx=0.6,rely=0.7,anchor="center")
+        self.digit_entry_widget3.place(relx=0.6,rely=0.72,anchor="center")
         self.digit_entry_widget4 = ctk.CTkEntry(self.unlock_screen,width=50,height=50,text_color="white",border_color="#430386",font=("Times New Roman",30), justify="center")
-        self.digit_entry_widget4.place(relx=0.8,rely=0.7,anchor="center")
+        self.digit_entry_widget4.place(relx=0.8,rely=0.72,anchor="center")
 
         def on_keyrelease(event, next_entry=None):
             current_text = event.widget.get()
@@ -430,6 +439,7 @@ class LoginForm():
                     self.digit4 = self.digit_entry_widget4.get()
                     code = ''.join([self.digit1, self.digit2, self.digit3, self.digit4])
                     self.swipe_login(username,code)
+                    # self.master.destroy()
             else:
                 event.widget.delete(len(current_text)-1,"end")
 
@@ -503,6 +513,7 @@ class LoginForm():
         fade_in()
 
     def swipe_login(self,username,code):
+        print("i am in swipe login")
         connect = sqlite3.connect("users.db")
         cursor = connect.cursor()
         cursor.execute("SELECT username,code FROM users WHERE username = ?",(username,))
@@ -511,8 +522,10 @@ class LoginForm():
         if result:
             stored_username = result[0]
             stored_code = result[1]
+            print(code)
+            print(stored_code)
         
-            if stored_code == code:
+            if int(stored_code) == int(code):
                 # Connect to SQLite database
                 connect = sqlite3.connect("game.db")
                 cursor_game_points = connect.cursor()
@@ -527,10 +540,188 @@ class LoginForm():
                 self.unlock_screen.destroy()
                 self.show_loading_screen(stored_username, username_points)  
             else:
-                return None
+                self.unlock_screen.destroy()
+                msg = CTkMessagebox(title="Error", message="Wrong code. Please try again!",icon="warning",option_1="Exit Program",option_2="Ok")
+                if msg.get() == "Exit Program":
+                    self.master.after(1000,self.master.destroy())
+                else:
+                    self.__init__()
         else:
-            return None   
-        
+            self.unlock_screen.destroy()
+            msg = CTkMessagebox(title="Error", message="Wrong username.",icon="warning",option_1="Exit Program",option_2="Ok") 
+            if msg.get() == "Exit Program":
+                self.master.after(1000,self.master.destroy())
+            else:
+                self.__init__()
+
+    def reset_username_gui(self,event):
+        self.unlock_screen.destroy()
+        self.reset_username_screen = ctk.CTkToplevel(self.master)
+        self.reset_username_screen.transient(self.master)
+        self.reset_username_screen.geometry("300x200")
+        self.reset_username_screen.title("Reset username Window")
+        self.reset_username_screen.configure(fg_color="white")
+        self.unlock_opened = False
+
+
+        self.reset_username_screen.resizable(False, False)
+        self.reset_username_screen.grab_set() 
+
+        screen_width = self.reset_username_screen.winfo_screenwidth()
+        screen_height = self.reset_username_screen.winfo_screenheight()
+
+        win_width = 300
+        win_height = 200
+
+        x_position = (screen_width // 2) - (win_width // 2)
+        y_position = (screen_height // 2) - (win_height // 2)
+
+        self.reset_username_screen.geometry(f"{win_width}x{win_height}+{x_position}+{y_position}") 
+
+        # reset icon 
+        self.reset_icon = ctk.CTkImage(Image.open(self.image_paths["reset.png"]),size=(35,30))
+        # top header
+        self.reset_head_label = ctk.CTkLabel(self.reset_username_screen,text="Change Username",image=self.reset_icon,font=("Times New Roman",25,"bold"),compound="left",text_color="black")
+        self.reset_head_label.place(relx=0.5,rely=0.2,anchor="center")
+        # username old and new entries 
+        self.reset_username_entry = ctk.CTkEntry(self.reset_username_screen,width=220,font=("Times New Roman",14,"bold"),placeholder_text="Old Username...",placeholder_text_color="black",fg_color="transparent",border_color="#430386",text_color="black")
+        self.reset_username_entry.place(relx=0.5,rely=0.4,anchor="center")
+        self.reset_username_entry_new = ctk.CTkEntry(self.reset_username_screen,width=220,font=("Times New Roman",14,"bold"),placeholder_text="New Username...",placeholder_text_color="black",fg_color="transparent",border_color="#430386",text_color="black")
+        self.reset_username_entry_new.place(relx=0.5,rely=0.6,anchor="center")
+        # submit button
+        self.reset_submit_button = ctk.CTkButton(self.reset_username_screen,width=220,text="Submit Changes",font=("Times New Roman",16,"bold"),fg_color="#430386",text_color="white",hover=None,command=self.reset_username_logic)
+        self.reset_submit_button.place(relx=0.5,rely=0.8,anchor="center")
+    
+    def reset_username_logic(self):
+        old_username = self.reset_username_entry.get().strip()
+        new_username = self.reset_username_entry_new.get().strip()
+
+        if not old_username or not new_username:
+            self.reset_username_entry.configure(placeholder_text="Both fields are required!!",placeholder_text_color="red")
+            self.reset_username_entry_new.configure(placeholder_text="Both fields are required!!",placeholder_text_color="red")
+        else:
+            connect_user = sqlite3.connect("users.db")
+            cursor_user = connect_user.cursor()
+            connect_game = sqlite3.connect("game.db")
+            cursor_game = connect_game.cursor()
+            cursor_user.execute("SELECT username FROM users WHERE username = ?",(old_username,))
+            result = cursor_user.fetchone()
+            if result:
+                old_username = result[0]
+                cursor_user.execute("SELECT username FROM users WHERE username = ?",(new_username,))
+                username_to_change = cursor_user.fetchone()
+                if username_to_change:
+                    self.reset_username_screen.destroy()
+                    msg = CTkMessagebox(title="Error",message="Username already exists!\nChoose a different username!",option_1="Exit Program",option_2="Ok")
+                    if msg.get() == "Exit Program":
+                        self.master.after(1000,self.master.destroy)
+                    else:
+                        pass
+                else:
+                    cursor_user.execute("UPDATE users SET username = ? WHERE username = ?",(new_username,old_username))
+                    cursor_game.execute("UPDATE game SET username = ? WHERE username = ?",(new_username,old_username))
+                    connect_user.commit()
+                    connect_game.commit()
+                    connect_user.close()
+                    connect_game.close()
+                    self.reset_username_screen.destroy()
+                    CTkMessagebox(title="Success",message=f"Username updated Successfully from\n{old_username} to {new_username}",icon="check")
+            else:
+                self.reset_username_screen.destroy()
+                msg = CTkMessagebox(title="Error",message="Couldn't found username.\nPlease try again!",option_1="Exit Program",option_2="Ok")
+                if msg.get() == "Exit Program":
+                    self.master.after(1000,self.master.destroy)
+                else:
+                    pass
+
+    def reset_code_gui(self,event):
+        self.unlock_screen.destroy()
+        self.reset_code_screen = ctk.CTkToplevel(self.master)
+        self.reset_code_screen.transient(self.master)
+        self.reset_code_screen.geometry("300x250")
+        self.reset_code_screen.title("Reset username Window")
+        self.reset_code_screen.configure(fg_color="white")
+        self.unlock_opened = False
+
+
+        self.reset_code_screen.resizable(False, False)
+        self.reset_code_screen.grab_set() 
+
+        screen_width = self.reset_code_screen.winfo_screenwidth()
+        screen_height = self.reset_code_screen.winfo_screenheight()
+
+        win_width = 300
+        win_height = 250
+
+        x_position = (screen_width // 2) - (win_width // 2)
+        y_position = (screen_height // 2) - (win_height // 2)
+
+        self.reset_code_screen.geometry(f"{win_width}x{win_height}+{x_position}+{y_position}") 
+
+        # reset icon 
+        self.reset_icon = ctk.CTkImage(Image.open(self.image_paths["reset.png"]),size=(35,30))
+        # top header
+        self.reset_head_label = ctk.CTkLabel(self.reset_code_screen,text="Change Code",image=self.reset_icon,font=("Times New Roman",25,"bold"),compound="left",text_color="black")
+        self.reset_head_label.place(relx=0.5,rely=0.2,anchor="center")
+        # username entry
+        self.reset_code_username_entry = ctk.CTkEntry(self.reset_code_screen,width=220,font=("Times New Roman",14,"bold"),placeholder_text="Username...",placeholder_text_color="black",fg_color="transparent",border_color="#430386",text_color="black")
+        self.reset_code_username_entry.place(relx=0.5,rely=0.4,anchor="center")
+        # code old and new entries 
+        self.reset_code_entry = ctk.CTkEntry(self.reset_code_screen,width=220,font=("Times New Roman",14,"bold"),placeholder_text="Old code...",placeholder_text_color="black",fg_color="transparent",border_color="#430386",text_color="black")
+        self.reset_code_entry.place(relx=0.5,rely=0.55,anchor="center")
+        self.reset_code_entry_new = ctk.CTkEntry(self.reset_code_screen,width=220,font=("Times New Roman",14,"bold"),placeholder_text="New code...",placeholder_text_color="black",fg_color="transparent",border_color="#430386",text_color="black")
+        self.reset_code_entry_new.place(relx=0.5,rely=0.7,anchor="center")
+        # submit button
+        self.reset_submit_button = ctk.CTkButton(self.reset_code_screen,width=220,text="Submit Changes",font=("Times New Roman",16,"bold"),fg_color="#430386",text_color="white",hover=None,command=self.reset_code_logic)
+        self.reset_submit_button.place(relx=0.5,rely=0.85,anchor="center")
+
+    def reset_code_logic(self):
+        username = self.reset_code_username_entry.get().strip()
+        old_code = self.reset_code_entry.get().strip()
+        new_code = self.reset_code_entry_new.get().strip()
+
+        if not username or not old_code or not new_code:
+            self.reset_code_username_entry.configure(placeholder_text="All fields are required!!",placeholder_text_color="red")
+            self.reset_code_entry.configure(placeholder_text="All fields are required!!",placeholder_text_color="red")
+            self.reset_code_entry_new.configure(placeholder_text="All fields are required!!",placeholder_text_color="red")
+        else:
+            if len(old_code) == 4 and len(new_code) == 4:
+                connect_user = sqlite3.connect("users.db")
+                cursor_user = connect_user.cursor()
+                cursor_user.execute("SELECT code FROM users WHERE username = ?",(username,))
+                result = cursor_user.fetchone()
+
+                if result:
+                    stored_code = result[0]
+                    print(old_code)
+                    print(stored_code)
+                    if int(stored_code) == int(old_code):
+                        cursor_user.execute("UPDATE users SET code = ? WHERE username = ?",(new_code,username))
+                        connect_user.commit()
+                        connect_user.close()
+                        self.reset_code_screen.destroy()
+                        CTkMessagebox(title="Success",message=f"Code change successfully from\n{old_code} to {new_code}!",icon="check")
+                    else:
+                        self.reset_code_screen.destroy()
+                        msg = CTkMessagebox(title="Error",message="Old code is not correct!\nPlease try again.",option_1="Exit Program",option_2="Ok")
+                        if msg.get() == "Exit Program":
+                            self.master.after(1000,self.master.destroy)
+                        else:
+                            pass
+                else:
+                    self.reset_code_screen.destroy()
+                    msg = CTkMessagebox(title="Error",message="Couldn't found username.\nPlease try again!",option_1="Exit Program",option_2="Ok")
+                    if msg.get() == "Exit Program":
+                        self.master.after(1000,self.master.destroy)
+                    else:
+                        pass
+            else:
+                self.reset_code_screen.destroy()
+                msg = CTkMessagebox(title="Error",message="Please provide 4 digit codes!!",option_1="Exit Program",option_2="Ok")
+                if msg.get() == "Exit Program":
+                    self.master.after(1000,self.master.destroy)
+                else:
+                    pass
 
 if __name__ == "__main__":
     ctk.set_appearance_mode("Dark")
