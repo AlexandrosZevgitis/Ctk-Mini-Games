@@ -54,15 +54,19 @@ def print_game_database():
 
     # Close connection
     connect.close()
+    
 
 class GameMenu(ctk.CTk):  
+    
 
-    def __init__(self, master,username, points):
+    def __init__(self, master):#,username, points):
         self.master = master
-        self.username = username
+        # self.username = username
         self.master.title("Game Menu")
-        self.master.minsize(1600,800)     
+        self.master.minsize(800,800)     
         self.master.maxsize(1800,850)
+        username="alex"
+        points=100
 
         # instances 
         self.user_points = self.get_user_points_from_database(username)
@@ -70,87 +74,94 @@ class GameMenu(ctk.CTk):
 
         # CREATING FRAMES 
         # frames left - middle - right 
-        self.left_main_frame = ctk.CTkFrame(master)
-        self.left_main_frame.place(relx=0.1, relwidth=0.25, rely=0.5, relheight=1, anchor="center")
-        self.middle_main_frame = ctk.CTkFrame(master)
-        self.middle_main_frame.place(relx=0.5, relwidth=0.55, rely=0.5, relheight=1, anchor="center")
-        self.right_main_frame = ctk.CTkFrame(master)
-        self.right_main_frame.place(relx=0.9, relwidth=0.25, rely=0.5, relheight=1, anchor="center")
+        self.left_main_frame = ctk.CTkFrame(master,corner_radius=0,fg_color="white")
+        self.left_main_frame.place(relx=0.17, relwidth=0.35, rely=0.5, relheight=1, anchor="center")
+        self.middle_main_frame = ctk.CTkFrame(master,corner_radius=0,fg_color="white")
+        self.middle_main_frame.place(relx=0.49, relwidth=0.3, rely=0.5, relheight=1, anchor="center")
+        self.right_main_frame = ctk.CTkFrame(master,corner_radius=0,fg_color="white")
+        self.right_main_frame.place(relx=0.81, relwidth=0.38, rely=0.5, relheight=1, anchor="center")
 
         # left frame profile top section
-        self.left_frame_profile_label = ctk.CTkLabel(self.left_main_frame, text=f"  Profile:\n {username}", font=("Times New Roman", 40))
+        self.left_frame_profile_label = ctk.CTkLabel(self.left_main_frame, text=f"  Profile\n {username}", font=("Times New Roman", 40,"bold"),text_color="black")
         self.left_frame_profile_label.place(relx=0.4, rely=0.1, anchor="center")
-        self.left_frame_profile_points_label = ctk.CTkLabel(self.left_main_frame, text=f"Points: {self.user_points[0]}", font=("Times New Roman", 20))
+        self.left_frame_profile_points_label = ctk.CTkLabel(self.left_main_frame, text=f"Points: {self.user_points[0]}", font=("Times New Roman", 20,"bold"),text_color="black")
         self.left_frame_profile_points_label.place(relx=0.4, rely=0.18, anchor="center")
-        self.left_frame_profile_ranking_label = ctk.CTkLabel(self.left_main_frame, text=f"Ranking: {self.display_user_rank}", font=("Times New Roman", 20))
+        self.left_frame_profile_ranking_label = ctk.CTkLabel(self.left_main_frame, text=f"Ranking: {self.display_user_rank}", font=("Times New Roman", 20,"bold"),text_color="black")
         self.left_frame_profile_ranking_label.place(relx=0.4, rely=0.22, anchor="center")
 
         # left frame lucky roulette
-        self.left_frame_lucky_roulette_head_label = ctk.CTkLabel(self.left_main_frame, text="LUCKY ROULETTE", font=("Times New Roman", 22))
-        self.left_frame_lucky_roulette_head_label.place(relx=0.4, rely = 0.38, anchor="center")
-        self.left_frame_lucky_roulette_chances_label = ctk.CTkLabel(self.left_main_frame, text="0 - 50pts = 70%\n50 - 70 pts = 50%\n70 - 100 pts = 35%\n100+ pts = 20%", font=("Times New Roman", 18))
+        self.left_frame_lucky_roulette_head_label = ctk.CTkLabel(self.left_main_frame, text="LUCKY ROULETTE", font=("Times New Roman", 22,"bold"),text_color="black")
+        self.left_frame_lucky_roulette_head_label.place(relx=0.42, rely = 0.38, anchor="center")
+        self.left_frame_lucky_roulette_chances_label = ctk.CTkLabel(self.left_main_frame, text="0 - 50pts = 70%\n50 - 70 pts = 50%\n70 - 100 pts = 35%\n100+ pts = 20%", font=("Times New Roman", 18),text_color="black")
         self.left_frame_lucky_roulette_chances_label.place(relx=0.4, rely=0.45, anchor="center")
-        self.left_frame_lucky_roulette_points_entry = ctk.CTkEntry(self.left_main_frame, width=150, font=("Times New Roman", 18), placeholder_text="Points Bet...")
+        self.left_frame_lucky_roulette_points_entry = ctk.CTkEntry(self.left_main_frame, width=150, font=("Times New Roman", 18), placeholder_text="Points Bet...",text_color="black",fg_color="transparent",placeholder_text_color="black",border_color="#430386")
         self.left_frame_lucky_roulette_points_entry.place(relx=0.4, rely=0.53, anchor="center")
-        self.left_frame_lucky_roulette_bet_button = ctk.CTkButton(self.left_main_frame, width=150, height=70, text="Play bet...", font=("Times New Roman", 18), corner_radius=50, command=lambda: self.roulette_play(username,self.user_points))
-        self.left_frame_lucky_roulette_bet_button.place(relx=0.4, rely=0.62, anchor="center")
+        self.left_frame_lucky_roulette_bet_button = ctk.CTkButton(self.left_main_frame, width=150, height=40, text="Play bet...", font=("Times New Roman", 18), corner_radius=50, command=lambda: self.roulette_play(username,self.user_points),text_color="white",fg_color="#430386",hover=None)
+        self.left_frame_lucky_roulette_bet_button.place(relx=0.4, rely=0.58, anchor="center")
 
         # left frame buttons 
-        self.left_frame_reset_challenges_button = ctk.CTkButton(self.left_main_frame, width=150, height=60, text="Pay 60 points.\nReset Games Challenges.", font=("Times New Roman", 16), cursor="hand2", corner_radius=50, command=lambda: self.reset_game_challenges(username))
-        self.left_frame_reset_challenges_button.place(relx=0.4, rely=0.8, anchor="center")
-        self.left_frame_exit_game_button = ctk.CTkButton(self.left_main_frame, width=150, height=60, text="Exit Game", font=("Times New Roman", 20), command=self.exit_game_button, corner_radius=50, cursor="hand2")
-        self.left_frame_exit_game_button.place(relx=0.4, rely=0.9, anchor="center")
+        self.left_frame_reset_challenges_button = ctk.CTkButton(self.left_main_frame, width=150, height=50, text="Pay 60 points.\nReset Games Challenges.", font=("Times New Roman", 16), cursor="hand2", corner_radius=50, command=lambda: self.reset_game_challenges(username),text_color="white",fg_color="#430386",hover=None)
+        self.left_frame_reset_challenges_button.place(relx=0.4, rely=0.7, anchor="center")
+        self.left_frame_exit_game_button = ctk.CTkButton(self.left_main_frame, width=150, height=50, text="Exit Game", font=("Times New Roman", 20), command=self.exit_game_button, corner_radius=50, cursor="hand2",text_color="white",fg_color="#430386",hover=None)
+        self.left_frame_exit_game_button.place(relx=0.4, rely=0.8, anchor="center")
+
+        # left frame copyrights 
+        self.copyrights_label = ctk.CTkLabel(self.left_main_frame,text="© 2025 Alexandros Zevgitis\nAll Rights Reserved.",font=("Times New Roman",12,"bold","underline"),text_color="black")
+        self.copyrights_label.place(relx=0.3,rely=0.95,anchor="center")
 
         # CREATING MIDDLE FRAME 
         # middle frame header
-        self.middle_frame_head_label = ctk.CTkLabel(self.middle_main_frame, text="MINI GAMES TO PLAY", font=("Times New Roman", 55))
-        self.middle_frame_head_label.place(relx = 0.47, rely=0.2, anchor="center")
+        self.middle_frame_head_label = ctk.CTkLabel(self.middle_main_frame, text="MINI GAMES", font=("Times New Roman", 25,"bold","underline"),text_color="#430386")
+        self.middle_frame_head_label.place(relx = 0.4, rely=0.15, anchor="center")
 
         # 4 button for the actual games
-        self.middle_main_frame_mastermind_button = ctk.CTkButton(self.middle_main_frame, width=180, height=130, text="MasterMind\n+50 , -25", font=("Times New Roman", 25), cursor="hand2", corner_radius=50, command=lambda: self.open_mastermind_window(username))
-        self.middle_main_frame_mastermind_button.place(relx=0.25, rely=0.4, anchor="center")
-        self.middle_main_frame_gtn_button = ctk.CTkButton(self.middle_main_frame, width=180, height=130, text="Guess\nThe Number\n+40 , -20", font=("Times New Roman", 25), cursor="hand2", corner_radius=50, command=lambda: self.open_gtn_window(username))
-        self.middle_main_frame_gtn_button.place(relx=0.7, rely=0.4, anchor="center")
-        self.middle_main_frame_hangman_button = ctk.CTkButton(self.middle_main_frame, width=180, height=130, text="HangMan\n+40 , -20", font=("Times New Roman", 25), cursor="hand2", corner_radius=50, command=lambda: self.open_hangman_window(username))
-        self.middle_main_frame_hangman_button.place(relx=0.25, rely=0.7, anchor="center")
-        self.middle_main_frame_mastermind_button = ctk.CTkButton(self.middle_main_frame, width=180, height=130, text="Rock\nPaper\nScissors\n+30 , -15", font=("Times New Roman", 25), corner_radius=50, cursor="hand2", command=lambda: self.open_rps_window(username))
-        self.middle_main_frame_mastermind_button.place(relx=0.7, rely=0.7, anchor="center")
+        self.middle_main_frame_mastermind_button = ctk.CTkButton(self.middle_main_frame, width=180, height=30, text="MasterMind\n+50 , -25", font=("Times New Roman", 18), cursor="hand2", corner_radius=30, command=lambda: self.open_mastermind_window(username),text_color="white",fg_color="#430386",hover=None)
+        self.middle_main_frame_mastermind_button.place(relx=0.4, rely=0.25, anchor="center")
+        self.middle_main_frame_gtn_button = ctk.CTkButton(self.middle_main_frame, width=180, height=30, text="Guess The Number\n+40 , -20", font=("Times New Roman", 18), cursor="hand2", corner_radius=30, command=lambda: self.open_gtn_window(username),text_color="white",fg_color="#430386",hover=None)
+        self.middle_main_frame_gtn_button.place(relx=0.4, rely=0.35, anchor="center")
+        self.middle_main_frame_hangman_button = ctk.CTkButton(self.middle_main_frame, width=180, height=30, text="HangMan\n+40 , -20", font=("Times New Roman", 18), cursor="hand2", corner_radius=30, command=lambda: self.open_hangman_window(username),text_color="white",fg_color="#430386",hover=None)
+        self.middle_main_frame_hangman_button.place(relx=0.4, rely=0.45, anchor="center")
+        self.middle_main_frame_mastermind_button = ctk.CTkButton(self.middle_main_frame, width=180, height=30, text="Rock-Paper-Scissors\n+30 , -15", font=("Times New Roman", 18), corner_radius=30, cursor="hand2", command=lambda: self.open_rps_window(username),text_color="white",fg_color="#430386",hover=None)
+        self.middle_main_frame_mastermind_button.place(relx=0.4, rely=0.55, anchor="center")
+        # more games to come label
+        self.more_games_to_come_label = ctk.CTkLabel(self.middle_main_frame,text="More games to come...",text_color="black",font=("Times New Roman",18,"bold"))
+        self.more_games_to_come_label.place(relx=0.4,rely=0.6,anchor="center")
 
         # CREATING RIGHT FRAME
         # right frame daily challenges labels and 
-        self.right_main_frame_top_label = ctk.CTkLabel(self.right_main_frame, text="Game Challenges", font=("Times New Roman", 35))
-        self.right_main_frame_top_label.place(relx=0.4, rely=0.1, anchor="center")
+        self.right_main_frame_top_label = ctk.CTkLabel(self.right_main_frame, text="Game Challenges", font=("Times New Roman", 35,"bold"),text_color="black")
+        self.right_main_frame_top_label.place(relx=0.45, rely=0.14, anchor="center")
         # first daily challenge
-        self.right_first_challenge_label = ctk.CTkLabel(self.right_main_frame, text="* 5 wins in MasterMind = 60 Points", font=("Times New Roman", 20))
+        self.right_first_challenge_label = ctk.CTkLabel(self.right_main_frame, text="✦5 MasterMind Wins\n60 Points", font=("Times New Roman", 20),text_color="black")
         self.right_first_challenge_label.place(relx=0.4, rely=0.2, anchor="center")
-        self.right_first_progress_bar = ctk.CTkSlider(self.right_main_frame, width=250,from_=0, to=5, number_of_steps=5, state="disabled")
+        self.right_first_progress_bar = ctk.CTkSlider(self.right_main_frame, width=250,from_=0, to=5, number_of_steps=5, state="disabled",fg_color="#430386",button_color="black")
         self.right_first_progress_bar.set(0)
-        self.right_first_progress_bar.place(relx=0.4, rely=0.23, anchor="center")
+        self.right_first_progress_bar.place(relx=0.45, rely=0.25, anchor="center")
         # second daily challenge
-        self.right_second_challenge_label = ctk.CTkLabel(self.right_main_frame, text="* 8 wins in Guess The Number = 35 Points", font=("Times New Roman", 20))
-        self.right_second_challenge_label.place(relx=0.45, rely=0.3, anchor="center")
-        self.right_second_progress_bar = ctk.CTkSlider(self.right_main_frame, width=250,from_=0, to=8, number_of_steps=8, state="disabled")
+        self.right_second_challenge_label = ctk.CTkLabel(self.right_main_frame, text="✦8 G_T_N Wins\n35 Points", font=("Times New Roman", 20),text_color="black")
+        self.right_second_challenge_label.place(relx=0.4, rely=0.3, anchor="center")
+        self.right_second_progress_bar = ctk.CTkSlider(self.right_main_frame, width=250,from_=0, to=8, number_of_steps=8, state="disabled",fg_color="#430386",button_color="black")
         self.right_second_progress_bar.set(0)
-        self.right_second_progress_bar.place(relx=0.4, rely=0.33, anchor="center")
+        self.right_second_progress_bar.place(relx=0.45, rely=0.35, anchor="center")
         # third daily challenge
-        self.right_third_challenge_label = ctk.CTkLabel(self.right_main_frame, text="* 6 wins in HangMan = 30 Points", font=("Times New Roman", 20))
+        self.right_third_challenge_label = ctk.CTkLabel(self.right_main_frame, text="✦6 HangMan Wins\n30 Points", font=("Times New Roman", 20),text_color="black")
         self.right_third_challenge_label.place(relx=0.4, rely=0.4, anchor="center")
-        self.right_third_progress_bar = ctk.CTkSlider(self.right_main_frame, width=250,from_=0, to=6, number_of_steps=6, state="disabled")
+        self.right_third_progress_bar = ctk.CTkSlider(self.right_main_frame, width=250,from_=0, to=6, number_of_steps=6, state="disabled",fg_color="#430386",button_color="black")
         self.right_third_progress_bar.set(0)
-        self.right_third_progress_bar.place(relx=0.4, rely=0.43, anchor="center")
+        self.right_third_progress_bar.place(relx=0.45, rely=0.45, anchor="center")
         # fourth daily challenge
-        self.right_fourth_challenge_label = ctk.CTkLabel(self.right_main_frame, text="* 12 wins in R-P-S game = 25 points", font=("Times New Roman", 20))
+        self.right_fourth_challenge_label = ctk.CTkLabel(self.right_main_frame, text="✦12 R-P-S Wins\n25 points", font=("Times New Roman", 20),text_color="black")
         self.right_fourth_challenge_label.place(relx=0.4, rely=0.5, anchor="center")
-        self.right_fourth_progress_bar = ctk.CTkSlider(self.right_main_frame, width=250,from_=0, to=12, number_of_steps=12, state="disabled")
+        self.right_fourth_progress_bar = ctk.CTkSlider(self.right_main_frame, width=250,from_=0, to=12, number_of_steps=12, state="disabled",fg_color="#430386",button_color="black")
         self.right_fourth_progress_bar.set(0)
-        self.right_fourth_progress_bar.place(relx=0.4, rely=0.53, anchor="center")
+        self.right_fourth_progress_bar.place(relx=0.45, rely=0.55, anchor="center")
 
         # Ranking system 
         # ranking system top label
-        self.right_rank_top_label = ctk.CTkLabel(self.right_main_frame, text="Ranking Board", font=("Times New Roman", 40))
+        self.right_rank_top_label = ctk.CTkLabel(self.right_main_frame, text="Ranking Board", font=("Times New Roman", 35,"bold"),text_color="black")
         self.right_rank_top_label.place(relx=0.4, rely=0.62, anchor="center")
-        self.right_rank_show_rank_label = ctk.CTkLabel(self.right_main_frame, text="", font=("Times New Roman", 20))
-        self.right_rank_show_rank_label.place(relx=0.4, rely=0.77, anchor="center")
+        self.right_rank_show_rank_label = ctk.CTkLabel(self.right_main_frame, text="", font=("Times New Roman", 20),text_color="black")
+        self.right_rank_show_rank_label.place(relx=0.4, rely=0.7, anchor="center")
         self.rank_board_print()
         self.update_daily_challenges(username)
 

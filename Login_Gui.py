@@ -79,7 +79,7 @@ class LoginForm():
         
         # load icon and images
         self.script_dir = os.path.dirname(os.path.abspath(__file__))
-        self.image_filename = ["bg_image.jpg", "email.jpg", "lock.jpg", "hide.png", "view.png", "add.png", "arrows.png", "id_card.png","reset.png"]
+        self.image_filename = ["main_bg.png", "email.jpg", "lock.jpg", "hide.png", "view.png", "add.png", "arrows.png", "id_card.png","reset.png"]
         self.image_paths = {name: os.path.join(self.script_dir, "images", name) for name in self.image_filename}
         self.unlock_opened = False
 
@@ -100,7 +100,7 @@ class LoginForm():
         self.right_frame.grid(row=0,column=1,sticky="nsew")
 
         # creating left frame widgets Image
-        self.left_frame_image = ctk.CTkImage(Image.open(self.image_paths["bg_image.jpg"]), size=(440,705))
+        self.left_frame_image = ctk.CTkImage(Image.open(self.image_paths["main_bg.png"]), size=(440,705))
         self.left_frame_image_label = ctk.CTkLabel(self.left_frame, text="", image=self.left_frame_image)
         self.left_frame_image_label.place(relx=0.49,rely=0.5,anchor="center")
 

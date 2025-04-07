@@ -33,4 +33,4 @@ def watch(script_name):
         observer.join()
 
 if __name__ == "__main__":
-    watch("Login_GUI.py")  # Replace with your main Python script
+    watch("games_menu_gui.py")  # Replace with your main Python script
