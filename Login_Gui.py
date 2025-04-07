@@ -513,7 +513,6 @@ class LoginForm():
         fade_in()
 
     def swipe_login(self,username,code):
-        print("i am in swipe login")
         connect = sqlite3.connect("users.db")
         cursor = connect.cursor()
         cursor.execute("SELECT username,code FROM users WHERE username = ?",(username,))
